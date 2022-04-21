@@ -1,27 +1,33 @@
-
-class SetImplKt<T : Comparable<T>>(capacity: Int = 1_000_001) : Set<T> {
+class SetImplKt<T : Comparable<T>>(capacity: Int = 1000) : Set<T> {
 
     // allocate array of size `capacity`
     // i-th element is a lock-free list of elements with (hash % capacity)==i
-    // for sake of simplicity no reallocations
+    // no reallocations allowed
 
-    override fun add(value: T): Boolean {
-        TODO("Not yet implemented")
-    }
+    private val sets = Array<LockFreeSlowSet<T>>(capacity) { LockFreeSlowSet() }
 
-    override fun remove(value: T): Boolean {
-        TODO("Not yet implemented")
-    }
+    private fun hashIndex(t: T) = t.hashCode() % sets.size
 
-    override fun contains(value: T): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun add(value: T): Boolean = sets[hashIndex(value)].add(value)
 
-    override fun isEmpty(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun remove(value: T): Boolean = sets[hashIndex(value)].remove(value)
 
-    override fun iterator(): MutableIterator<T> {
-        TODO("Not yet implemented")
+    override fun contains(value: T): Boolean = sets[hashIndex(value)].lookup(value)
+
+    override fun isEmpty(): Boolean = !iterator().hasNext()
+
+    override fun iterator(): Iterator<T> {
+        fun globalVersionedList(): List<Pair<T, Long>> = sets.flatMap {
+            object : Iterable<Pair<T, Long>> {
+                override fun iterator(): Iterator<Pair<T, Long>> = it.versionedIterator()
+            }
+        }
+        do {
+            // take two snapshots, compare version vectors
+            val verList = globalVersionedList()
+            val v1 = verList.map { it.second }
+            val v2 = globalVersionedList().map { it.second }
+            if (v1 == v2) return verList.map { it.first }.iterator()
+        } while (true)
     }
 }

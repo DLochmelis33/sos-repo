@@ -1,10 +1,13 @@
+import java.util.NoSuchElementException
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 // set based on a lock-free list
-interface LockFreeSlowSet<T> : Iterable<T> {
+interface LockFreeSlowSet<T> {
     fun lookup(t: T): Boolean
     fun add(t: T): Boolean
     fun remove(t: T): Boolean
+    fun versionedIterator(): Iterator<Pair<T, Long>>
 }
 
 fun <T> LockFreeSlowSet(): LockFreeSlowSet<T> = LockFreeSlowSetImpl()
@@ -26,6 +29,13 @@ private class LockFreeSlowSetImpl<T> : LockFreeSlowSet<T> {
     ) {
         operator fun component1() = next
         operator fun component2() = valid
+
+        val ver = nextVer()
+    }
+
+    companion object {
+        private val ver = AtomicLong(0)
+        fun nextVer() = ver.incrementAndGet()
     }
 
     private val tail = Node(null, NodeInfo(null))
@@ -79,8 +89,17 @@ private class LockFreeSlowSetImpl<T> : LockFreeSlowSet<T> {
         } while (true)
     }
 
-    override fun iterator(): Iterator<T> {
-        TODO("Not yet implemented")
+    override fun versionedIterator() = object : Iterator<Pair<T, Long>> {
+        private var curr = head
+
+        override fun hasNext(): Boolean = curr.infoRef.get().next != tail
+
+        override fun next(): Pair<T, Long> {
+            curr = curr.infoRef.get().next ?: unreachable
+            val t = curr.t ?: throw NoSuchElementException()
+            val currInfo = curr.infoRef.get()
+            return Pair(t, currInfo.ver)
+        }
     }
 
 }
