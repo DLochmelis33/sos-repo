@@ -1,3 +1,5 @@
+import kotlin.math.abs
+
 class SetImplKt<T : Comparable<T>>(capacity: Int = 1000) : Set<T> {
 
     // allocate array of size `capacity`
@@ -6,7 +8,7 @@ class SetImplKt<T : Comparable<T>>(capacity: Int = 1000) : Set<T> {
 
     private val sets = Array<LockFreeSlowSet<T>>(capacity) { LockFreeSlowSet() }
 
-    private fun hashIndex(t: T) = t.hashCode() % sets.size
+    private fun hashIndex(t: T) = abs(t.hashCode() % sets.size)
 
     override fun add(value: T): Boolean = sets[hashIndex(value)].add(value)
 
