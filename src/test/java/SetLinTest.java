@@ -14,6 +14,11 @@ import java.util.Iterator;
 @Param(name = "v", gen = IntGen.class)
 public class SetLinTest extends VerifierState {
 
+    static {
+        System.setProperty("--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
+        System.setProperty("--add-exports", "java.base/jdk.internal.util=ALL-UNNAMED");
+    }
+
     @Test
     public void test() {
         LinChecker.check(SetLinTest.class);
