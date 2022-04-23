@@ -11,7 +11,7 @@ class SetImplKt<T : Comparable<T>>(capacity: Int = 1000) : Set<T> {
 
     override fun remove(value: T): Boolean = sets[hashIndex(value)].remove(value)
 
-    override fun contains(value: T): Boolean = sets[hashIndex(value)].lookup(value)
+    override fun contains(value: T): Boolean = sets[hashIndex(value)].contains(value)
 
     override fun isEmpty(): Boolean = !iterator().hasNext()
 

@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 // set based on a lock-free list
 interface LockFreeSlowSet<T> {
-    fun lookup(t: T): Boolean
+    fun contains(t: T): Boolean
     fun add(t: T): Boolean
     fun remove(t: T): Boolean
     fun versionedIterator(): Iterator<Pair<T, Long>>
@@ -62,7 +62,7 @@ private class LockFreeSlowSetImpl<T> : LockFreeSlowSet<T> {
         }
     }
 
-    override fun lookup(t: T): Boolean {
+    override fun contains(t: T): Boolean {
         var cur = head.infoRef.get().next ?: unreachable
         while (cur != tail) {
             val curInfo = cur.infoRef.get()

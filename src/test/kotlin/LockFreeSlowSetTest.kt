@@ -6,11 +6,11 @@ class LockFreeSlowSetTest {
     @Test//(timeout = 1000)
     fun testSimple() {
         val set = LockFreeSlowSet<Int>()
-        assertFalse(set.lookup(5))
+        assertFalse(set.contains(5))
         assertTrue(set.add(5))
-        assertTrue(set.lookup(5))
+        assertTrue(set.contains(5))
         assertTrue(set.remove(5))
-        assertFalse(set.lookup(5))
+        assertFalse(set.contains(5))
         assertFalse(set.remove(5))
     }
 
