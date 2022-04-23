@@ -63,8 +63,13 @@ private class LockFreeSlowSetImpl<T> : LockFreeSlowSet<T> {
     }
 
     override fun lookup(t: T): Boolean {
-        val (_, curr) = lookupInternal(t)
-        return curr.infoRef.get().valid && curr.t == t
+        var cur = head.infoRef.get().next ?: unreachable
+        while (cur != tail) {
+            val curInfo = cur.infoRef.get()
+            if (cur.t == t && curInfo.valid) return true
+            cur = curInfo.next ?: unreachable
+        }
+        return false
     }
 
     override fun add(t: T): Boolean {

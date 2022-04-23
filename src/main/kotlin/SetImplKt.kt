@@ -1,10 +1,7 @@
 import kotlin.math.abs
 
+// uses LockFreeSlowSet with sharding
 class SetImplKt<T : Comparable<T>>(capacity: Int = 1000) : Set<T> {
-
-    // allocate array of size `capacity`
-    // i-th element is a lock-free list of elements with (hash % capacity)==i
-    // no reallocations allowed
 
     private val sets = Array<LockFreeSlowSet<T>>(capacity) { LockFreeSlowSet() }
 
@@ -24,12 +21,17 @@ class SetImplKt<T : Comparable<T>>(capacity: Int = 1000) : Set<T> {
                 override fun iterator(): Iterator<Pair<T, Long>> = it.versionedIterator()
             }
         }
-        do {
-            // take two snapshots, compare version vectors
-            val verList = globalVersionedList()
+
+        // take two snapshots, compare version vectors
+        var verList = globalVersionedList()
+        while (true) {
+            val curVerList = globalVersionedList()
             val v1 = verList.map { it.second }
-            val v2 = globalVersionedList().map { it.second }
-            if (v1 == v2) return verList.map { it.first }.iterator()
-        } while (true)
+            val v2 = curVerList.map { it.second }
+            if (v1 == v2)
+                return verList.map { it.first }.iterator()
+            else
+                verList = curVerList
+        }
     }
 }
